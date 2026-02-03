@@ -14,7 +14,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'git@github.com:p-i-k-l-u/OrangeHRM-Test-Framework.git'
+                git branch: 'main', url: 'https://github.com/p-i-k-l-u/OrangeHRM-Test-Framework.git'
             }
         }
 
