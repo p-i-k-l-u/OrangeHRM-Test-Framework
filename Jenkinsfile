@@ -2,12 +2,8 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven3'      // Name configured in Jenkins Global Tool Config
-        jdk 'JDK17'         // Or JDK11/17 based on your setup
-    }
-
-    environment {
-        MAVEN_OPTS = "-Dmaven.test.failure.ignore=true"
+        maven 'Maven3'
+        jdk 'JDK17'
     }
 
     stages {
@@ -20,13 +16,13 @@ pipeline {
 
         stage('Clean & Compile') {
             steps {
-                sh 'mvn clean compile'
+                bat 'mvn clean compile'
             }
         }
 
         stage('Run TestNG Tests') {
             steps {
-                sh 'mvn test -DsuiteXmlFile=testng.xml'
+                bat 'mvn test -DsuiteXmlFile=testng.xml'
             }
         }
 
@@ -36,7 +32,7 @@ pipeline {
             }
         }
 
-        stage('Archive Screenshots (if any)') {
+        stage('Archive Screenshots') {
             steps {
                 archiveArtifacts artifacts: 'src/test/resources/screenshots/**/*.png', allowEmptyArchive: true
             }
@@ -44,14 +40,8 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Pipeline Finished'
-        }
-        success {
-            echo 'All Tests Passed ✅'
-        }
-        failure {
-            echo 'Some Tests Failed ❌ Check Reports'
-        }
+        always { echo 'Pipeline Finished' }
+        success { echo 'All Tests Passed ✅' }
+        failure { echo 'Some Tests Failed ❌ Check Reports' }
     }
 }
