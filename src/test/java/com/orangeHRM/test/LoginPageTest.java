@@ -101,6 +101,7 @@
 package com.orangeHRM.test;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -113,6 +114,12 @@ public class LoginPageTest extends BaseClass {
     private LoginPage loginPage;
     private HomePage homePage;
 
+    @BeforeClass
+    public void setUpClass() {
+        // Initialize driver before creating page objects
+        setup();
+    }
+
     @BeforeMethod
     public void setupPages() {
         loginPage = new LoginPage(getDriver());
@@ -121,17 +128,13 @@ public class LoginPageTest extends BaseClass {
 
     @Test
     public void verifyValidLoginTest() {
-        // Login
         boolean loginStatus = loginPage.login("admin", "admin123");
         Assert.assertTrue(loginStatus, "Login failed.");
 
-        // Verify Admin tab visibility
-        Assert.assertTrue(homePage.isAdminTabVisible(),
-                "Admin tab should be visible after successful login.");
+        Assert.assertTrue(homePage.isAdminTabVisible(), 
+            "Admin tab should be visible after successful login.");
 
-        // Logout
         homePage.logout();
     }
 }
-
 

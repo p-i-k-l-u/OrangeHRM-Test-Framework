@@ -35,6 +35,7 @@
 package com.orangeHRM.test;
 
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -47,6 +48,12 @@ public class HomePageTest extends BaseClass {
     private LoginPage loginPage;
     private HomePage homePage;
 
+    @BeforeClass
+    public void setUpClass() {
+        // Initialize driver before creating page objects
+        setup();
+    }
+
     @BeforeMethod
     public void setupPages() {
         loginPage = new LoginPage(getDriver());
@@ -55,15 +62,10 @@ public class HomePageTest extends BaseClass {
 
     @Test
     public void verifyOrangeHRMLogo() {
-        // Login first
-        boolean loginStatus = loginPage.login("admin", "admin123");
-        Assert.assertTrue(loginStatus, "Login failed. Cannot verify logo.");
-
-        // Verify Logo visibility
+        loginPage.login("admin", "admin123");
         Assert.assertTrue(homePage.verifyOrangeHRMlogo(), "OrangeHRM logo is not visible.");
     }
 }
-
 
 
 
