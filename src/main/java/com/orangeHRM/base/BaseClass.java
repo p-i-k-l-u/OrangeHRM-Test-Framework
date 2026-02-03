@@ -94,6 +94,7 @@ public class BaseClass {
 		    options.addArguments("--window-size=1920,1080");
 
 		    driver = new ChromeDriver(options);
+		    logger.info("ChromeDriver started in headless mode.");
 		}
 	}
 
