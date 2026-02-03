@@ -68,7 +68,6 @@
 
 
 // ------------------------ NEW CODE ----------------------------
-
 package com.orangeHRM.pages;
 
 import org.openqa.selenium.By;
@@ -82,26 +81,33 @@ public class LoginPage {
     private ActionDriver actionDriver;
 
     private By userNameField = By.name("username");
-    private By passwordField = By.cssSelector("input[type='password']");
+    private By passwordField = By.name("password");
     private By loginButton = By.xpath("//button[@type='submit']");
-    private By adminTab = By.xpath("//span[text()='Admin']");
+    private By adminTab = By.xpath("//span[normalize-space()='Admin']");
+    private By errorMsg = By.xpath("//p[contains(@class,'alert-content-text')]");
 
     public LoginPage(WebDriver driver) {
         this.driver = driver;
         this.actionDriver = new ActionDriver(driver);
     }
 
-    public void login(String username, String password) {
+    public boolean login(String username, String password) {
+
         actionDriver.enterText(userNameField, username);
         actionDriver.enterText(passwordField, password);
         actionDriver.click(loginButton);
 
-        // Wait until dashboard loads
-        actionDriver.waitForVisibility(adminTab, 30);
+        actionDriver.waitForPageToLoad(10);
+
+        // If login fails
+        if (driver.findElements(errorMsg).size() > 0) {
+            System.out.println("❌ Login Failed");
+            return false;
+        }
+
+        // If login succeeds
+        actionDriver.waitForVisibility(adminTab, 20);
+        System.out.println("✅ Login Successful");
+        return true;
     }
 }
-
-
-
-
-

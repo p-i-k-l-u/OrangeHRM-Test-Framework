@@ -158,15 +158,12 @@
 
 
 // -----------------  NEW CODE --------------------
-
 package com.orangeHRM.actiondriver;
 
 import java.time.Duration;
 
-import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.*;
 
 import com.orangeHRM.base.BaseClass;
 
@@ -174,109 +171,48 @@ public class ActionDriver {
 
     private WebDriver driver;
     private WebDriverWait wait;
-    public static final Logger logger = BaseClass.logger;
 
     public ActionDriver(WebDriver driver) {
         this.driver = driver;
-        int explicitWait = Integer.parseInt(BaseClass.getProp().getProperty("explicitwait").trim());
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitWait));
-        logger.info("ActionDriver initialized with wait: " + explicitWait + " seconds");
+        int explicitwait = Integer.parseInt(BaseClass.getProp().getProperty("explicitwait"));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitwait));
     }
 
-    /* ================= CLICK ================= */
     public void click(By by) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.elementToBeClickable(by));
-            scrollToElement(by);
-            element.click();
-            logger.info("Clicked element: " + by);
-        } catch (Exception e) {
-            logger.warn("Normal click failed. Trying JS click: " + by);
-            jsClick(by);
-        }
+        waitForClickable(by);
+        driver.findElement(by).click();
     }
 
-    private void jsClick(By by) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(by));
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            js.executeScript("arguments[0].click();", element);
-            logger.info("JS Click performed: " + by);
-        } catch (Exception e) {
-            logger.error("Failed to click element: " + by, e);
-            throw e;
-        }
-    }
-
-    /* ================= ENTER TEXT ================= */
     public void enterText(By by, String value) {
-        try {
-            WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(by));
-            element.clear();
-            element.sendKeys(value);
-            logger.info("Entered text into: " + by);
-        } catch (Exception e) {
-            logger.error("Unable to enter text in: " + by, e);
-            throw e;
-        }
+        WebElement element = waitForVisible(by);
+        element.clear();
+        element.sendKeys(value);
     }
 
-    /* ================= GET TEXT ================= */
-    public String getText(By by) {
-        try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(by)).getText();
-        } catch (Exception e) {
-            logger.error("Unable to get text from: " + by, e);
-            throw e;
-        }
+    public WebElement waitForVisible(By by) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
     }
 
-    /* ================= COMPARE TEXT ================= */
-    public boolean compareText(By by, String expectedText) {
-        String actual = getText(by);
-        boolean result = actual.equals(expectedText);
-        logger.info("Comparing Text | Expected: " + expectedText + " | Actual: " + actual);
-        return result;
-    }
-
-    /* ================= IS DISPLAYED ================= */
-    public boolean isDisplayed(By by) {
-        try {
-            return wait.until(ExpectedConditions.visibilityOfElementLocated(by)).isDisplayed();
-        } catch (TimeoutException e) {
-            logger.error("Element not visible: " + by);
-            return false;
-        }
-    }
-
-    /* ================= WAIT METHODS ================= */
     public void waitForVisibility(By by, int seconds) {
         new WebDriverWait(driver, Duration.ofSeconds(seconds))
                 .until(ExpectedConditions.visibilityOfElementLocated(by));
     }
 
-    public void waitForPageLoad(int timeoutSec) {
-        new WebDriverWait(driver, Duration.ofSeconds(timeoutSec)).until(webDriver ->
-                ((JavascriptExecutor) webDriver).executeScript("return document.readyState").equals("complete"));
-        logger.info("Page fully loaded");
+    public void waitForClickable(By by) {
+        wait.until(ExpectedConditions.elementToBeClickable(by));
     }
 
-    /* ================= SCROLL ================= */
-    public void scrollToElement(By by) {
+    public boolean isDisplayed(By by) {
         try {
-            WebElement element = driver.findElement(by);
-            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+            return waitForVisible(by).isDisplayed();
         } catch (Exception e) {
-            logger.warn("Scroll failed for: " + by);
+            return false;
         }
     }
+
+    public void waitForPageToLoad(int sec) {
+        new WebDriverWait(driver, Duration.ofSeconds(sec)).until(
+                webDriver -> ((JavascriptExecutor) webDriver)
+                        .executeScript("return document.readyState").equals("complete"));
+    }
 }
-
-
-
-
-
-
-
-
-

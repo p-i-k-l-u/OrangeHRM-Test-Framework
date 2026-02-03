@@ -191,104 +191,61 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-
-import com.orangeHRM.actiondriver.ActionDriver;
-import com.orangeHRM.utilities.LoggerManager;
 
 public class BaseClass {
 
-    protected static Properties prop;
     protected static WebDriver driver;
-    protected static ActionDriver actionDriver;
-    public static final Logger logger = LoggerManager.getLogger(BaseClass.class);
+    protected static Properties prop;
+    public static final Logger logger = LogManager.getLogger(BaseClass.class);
 
-    /* ================= LOAD CONFIG ================= */
-    @BeforeSuite
-    public void loadConfig() throws IOException {
-        prop = new Properties();
-        FileInputStream fis = new FileInputStream("src/main/resources/config.properties");
-        prop.load(fis);
-        logger.info("Config.properties loaded successfully");
+    public BaseClass() {
+        loadConfig();
     }
 
-    /* ================= SETUP ================= */
-    @BeforeMethod
-    public void setup() {
-        System.out.println("Setting Up WebDriver for: " + this.getClass().getSimpleName());
-        launchBrowser();
-        configureBrowser();
-
-        actionDriver = new ActionDriver(driver); // ALWAYS NEW DRIVER PER TEST
-        logger.info("Driver & ActionDriver initialized");
-    }
-
-    /* ================= LAUNCH BROWSER ================= */
-    private void launchBrowser() {
-        String browser = prop.getProperty("browser").trim();
-
-        if (browser.equalsIgnoreCase("chrome")) {
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments("--headless=new");
-            options.addArguments("--no-sandbox");
-            options.addArguments("--disable-dev-shm-usage");
-            options.addArguments("--window-size=1920,1080");
-
-            driver = new ChromeDriver(options);
-            logger.info("Chrome launched in headless mode");
-        } else {
-            throw new RuntimeException("Only Chrome supported in CI");
+    // Load config.properties
+    public void loadConfig() {
+        try {
+            prop = new Properties();
+            FileInputStream fis = new FileInputStream("src/test/resources/Config.properties");
+            prop.load(fis);
+            logger.info("Config file loaded");
+        } catch (IOException e) {
+            logger.error("Failed to load config file " + e.getMessage());
         }
     }
 
-    /* ================= CONFIGURE BROWSER ================= */
-    private void configureBrowser() {
-        int implicitWait = Integer.parseInt(prop.getProperty("impicitWait").trim());
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
-        driver.manage().window().maximize();
-        driver.get(prop.getProperty("url"));
-        logger.info("Browser configured and URL opened");
-    }
-
-    /* ================= TEARDOWN ================= */
-    @AfterMethod
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-            logger.info("Driver closed");
-        }
-        driver = null;
-        actionDriver = null;
-    }
-
-    /* ================= GETTERS ================= */
-    public static WebDriver getDriver() {
-        if (driver == null)
-            throw new IllegalStateException("Driver not initialized");
-        return driver;
-    }
-
-    public static ActionDriver getActionDriver() {
-        if (actionDriver == null)
-            throw new IllegalStateException("ActionDriver not initialized");
-        return actionDriver;
-    }
-
-    public static Properties getProp() {   // 🔥 THIS WAS MISSING
+    public static Properties getProp() {
         return prop;
     }
 
-    /* ================= STATIC WAIT ================= */
-    public void staticWait(int seconds) {
-        LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(seconds));
+    public void setup() {
+        String browser = prop.getProperty("browser");
+
+        if (browser.equalsIgnoreCase("chrome")) {
+            driver = new ChromeDriver();
+        }
+
+        driver.manage().window().maximize();
+        driver.manage().timeouts()
+                .implicitlyWait(Duration.ofSeconds(Integer.parseInt(prop.getProperty("impicitWait"))));
+
+        driver.get(prop.getProperty("url"));
+        logger.info("Browser launched and URL opened");
+    }
+
+    public WebDriver getDriver() {
+        return driver;
+    }
+
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+            logger.info("Browser closed");
+        }
     }
 }
