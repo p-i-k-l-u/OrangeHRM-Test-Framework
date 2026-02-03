@@ -11,6 +11,7 @@ import java.util.concurrent.locks.LockSupport;
 import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.testng.annotations.AfterMethod;
@@ -72,17 +73,27 @@ public class BaseClass {
 
 		String browser = prop.getProperty("browser");
 
+//		if (browser.equalsIgnoreCase("chrome")) {
+//			driver = new ChromeDriver();
+//			logger.info("ChromeDriver Instance is Created.");
+//		} else if (browser.equalsIgnoreCase("firefox")) {
+//			driver = new FirefoxDriver();
+//			logger.info("Firefox Instance is Created.");
+//		} else if (browser.equalsIgnoreCase("edge")) {
+//			driver = new EdgeDriver();
+//			logger.info("Edge Instance is Created.");
+//		} else {
+//			throw new IllegalArgumentException("Browser Not Supported");
+//		}
+		
 		if (browser.equalsIgnoreCase("chrome")) {
-			driver = new ChromeDriver();
-			logger.info("ChromeDriver Instance is Created.");
-		} else if (browser.equalsIgnoreCase("firefox")) {
-			driver = new FirefoxDriver();
-			logger.info("Firefox Instance is Created.");
-		} else if (browser.equalsIgnoreCase("edge")) {
-			driver = new EdgeDriver();
-			logger.info("Edge Instance is Created.");
-		} else {
-			throw new IllegalArgumentException("Browser Not Supported");
+		    ChromeOptions options = new ChromeOptions();
+		    options.addArguments("--headless=new");
+		    options.addArguments("--no-sandbox");
+		    options.addArguments("--disable-dev-shm-usage");
+		    options.addArguments("--window-size=1920,1080");
+
+		    driver = new ChromeDriver(options);
 		}
 	}
 
