@@ -185,6 +185,74 @@
 
 //                                     -------------  NEW CODE -----------------------
 
+//package com.orangeHRM.base;
+//
+//import java.io.FileInputStream;
+//import java.io.IOException;
+//import java.time.Duration;
+//import java.util.Properties;
+//
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
+//import org.openqa.selenium.WebDriver;
+//import org.openqa.selenium.chrome.ChromeDriver;
+//
+//public class BaseClass {
+//
+//    protected static WebDriver driver;
+//    protected static Properties prop;
+//    public static final Logger logger = LogManager.getLogger(BaseClass.class);
+//
+//    public BaseClass() {
+//        loadConfig();
+//    }
+//
+//    // Load config.properties
+//    public void loadConfig() {
+//        try {
+//            prop = new Properties();
+//            FileInputStream fis = new FileInputStream("src/test/resources/Config.properties");
+//            prop.load(fis);
+//            logger.info("Config file loaded");
+//        } catch (IOException e) {
+//            logger.error("Failed to load config file " + e.getMessage());
+//        }
+//    }
+//
+//    public static Properties getProp() {
+//        return prop;
+//    }
+//
+//    public void setup() {
+//        String browser = prop.getProperty("browser");
+//
+//        if (browser.equalsIgnoreCase("chrome")) {
+//            driver = new ChromeDriver();
+//        }
+//
+//        driver.manage().window().maximize();
+//        driver.manage().timeouts()
+//                .implicitlyWait(Duration.ofSeconds(Integer.parseInt(prop.getProperty("impicitWait"))));
+//
+//        driver.get(prop.getProperty("url"));
+//        logger.info("Browser launched and URL opened");
+//    }
+//
+//    public WebDriver getDriver() {
+//        return driver;
+//    }
+//
+//    public void tearDown() {
+//        if (driver != null) {
+//            driver.quit();
+//            logger.info("Browser closed");
+//        }
+//    }
+//}
+
+
+//                                  :: 2nd NEW CODE ::
+
 package com.orangeHRM.base;
 
 import java.io.FileInputStream;
@@ -203,39 +271,70 @@ public class BaseClass {
     protected static Properties prop;
     public static final Logger logger = LogManager.getLogger(BaseClass.class);
 
+    // Default values
+    private static final String DEFAULT_BROWSER = "chrome";
+    private static final String DEFAULT_URL = "https://opensource-demo.orangehrmlive.com/";
+    private static final int DEFAULT_IMPLICIT_WAIT = 10;
+
     public BaseClass() {
         loadConfig();
     }
 
-    // Load config.properties
+    /**
+     * Load Config.properties safely
+     */
     public void loadConfig() {
-        try {
-            prop = new Properties();
-            FileInputStream fis = new FileInputStream("src/test/resources/Config.properties");
+        prop = new Properties();
+        try (FileInputStream fis = new FileInputStream("src/test/resources/Config.properties")) {
             prop.load(fis);
-            logger.info("Config file loaded");
+            logger.info("Config file loaded successfully");
         } catch (IOException e) {
-            logger.error("Failed to load config file " + e.getMessage());
+            logger.warn("Config.properties not found. Using default values.");
         }
+    }
+
+    /**
+     * Get property with default fallback
+     */
+    public static String getProperty(String key, String defaultValue) {
+        if (prop != null && prop.getProperty(key) != null && !prop.getProperty(key).isEmpty()) {
+            return prop.getProperty(key);
+        }
+        logger.warn("Property '" + key + "' missing. Using default: " + defaultValue);
+        return defaultValue;
     }
 
     public static Properties getProp() {
         return prop;
     }
 
+    /**
+     * Setup WebDriver
+     */
     public void setup() {
-        String browser = prop.getProperty("browser");
+        String browser = getProperty("browser", DEFAULT_BROWSER);
+        String url = getProperty("url", DEFAULT_URL);
+        int implicitWait = 0;
+
+        try {
+            implicitWait = Integer.parseInt(getProperty("implicitWait", String.valueOf(DEFAULT_IMPLICIT_WAIT)));
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid implicitWait value. Using default: " + DEFAULT_IMPLICIT_WAIT);
+            implicitWait = DEFAULT_IMPLICIT_WAIT;
+        }
 
         if (browser.equalsIgnoreCase("chrome")) {
+            driver = new ChromeDriver();
+        } else {
+            logger.warn("Unsupported browser. Defaulting to Chrome.");
             driver = new ChromeDriver();
         }
 
         driver.manage().window().maximize();
-        driver.manage().timeouts()
-                .implicitlyWait(Duration.ofSeconds(Integer.parseInt(prop.getProperty("impicitWait"))));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
 
-        driver.get(prop.getProperty("url"));
-        logger.info("Browser launched and URL opened");
+        driver.get(url);
+        logger.info("Browser launched and URL opened: " + url);
     }
 
     public WebDriver getDriver() {
@@ -249,3 +348,10 @@ public class BaseClass {
         }
     }
 }
+
+
+
+
+
+
+

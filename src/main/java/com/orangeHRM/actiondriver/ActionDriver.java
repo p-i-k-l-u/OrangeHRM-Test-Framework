@@ -158,13 +158,73 @@
 
 
 // -----------------  NEW CODE --------------------
+//package com.orangeHRM.actiondriver;
+//
+//import java.time.Duration;
+//
+//import org.openqa.selenium.*;
+//import org.openqa.selenium.support.ui.*;
+//
+//import com.orangeHRM.base.BaseClass;
+//
+//public class ActionDriver {
+//
+//    private WebDriver driver;
+//    private WebDriverWait wait;
+//
+//    public ActionDriver(WebDriver driver) {
+//        this.driver = driver;
+//        int explicitwait = Integer.parseInt(BaseClass.getProp().getProperty("explicitwait"));
+//        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitwait));
+//    }
+//
+//    public void click(By by) {
+//        waitForClickable(by);
+//        driver.findElement(by).click();
+//    }
+//
+//    public void enterText(By by, String value) {
+//        WebElement element = waitForVisible(by);
+//        element.clear();
+//        element.sendKeys(value);
+//    }
+//
+//    public WebElement waitForVisible(By by) {
+//        return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
+//    }
+//
+//    public void waitForVisibility(By by, int seconds) {
+//        new WebDriverWait(driver, Duration.ofSeconds(seconds))
+//                .until(ExpectedConditions.visibilityOfElementLocated(by));
+//    }
+//
+//    public void waitForClickable(By by) {
+//        wait.until(ExpectedConditions.elementToBeClickable(by));
+//    }
+//
+//    public boolean isDisplayed(By by) {
+//        try {
+//            return waitForVisible(by).isDisplayed();
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
+//
+//    public void waitForPageToLoad(int sec) {
+//        new WebDriverWait(driver, Duration.ofSeconds(sec)).until(
+//                webDriver -> ((JavascriptExecutor) webDriver)
+//                        .executeScript("return document.readyState").equals("complete"));
+//    }
+//}
+
+
+// 													:: 2nd NEW CODE ::
+
 package com.orangeHRM.actiondriver;
 
 import java.time.Duration;
-
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.*;
-
 import com.orangeHRM.base.BaseClass;
 
 public class ActionDriver {
@@ -172,23 +232,64 @@ public class ActionDriver {
     private WebDriver driver;
     private WebDriverWait wait;
 
+    // Default values
+    private static final int DEFAULT_IMPLICIT_WAIT = 10;
+    private static final int DEFAULT_EXPLICIT_WAIT = 20;
+    private static final int DEFAULT_PAGELOAD_TIMEOUT = 30;
+    private static final int DEFAULT_RETRY_COUNT = 3;
+
     public ActionDriver(WebDriver driver) {
         this.driver = driver;
-        int explicitwait = Integer.parseInt(BaseClass.getProp().getProperty("explicitwait"));
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitwait));
+
+        // Read explicit wait safely
+        int explicitWait = getIntProperty("explicitWait", DEFAULT_EXPLICIT_WAIT);
+
+        // Initialize WebDriverWait
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(explicitWait));
+
+        // Optional: you can read other properties if needed
+        int implicitWait = getIntProperty("implicitWait", DEFAULT_IMPLICIT_WAIT);
+        int pageLoadTimeout = getIntProperty("pageLoadTimeout", DEFAULT_PAGELOAD_TIMEOUT);
+        int retryCount = getIntProperty("retryCount", DEFAULT_RETRY_COUNT);
+
+        // Set implicit wait
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
+
+        // Set page load timeout
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(pageLoadTimeout));
     }
 
+    /**
+     * Safely read integer from Config.properties
+     */
+    private int getIntProperty(String key, int defaultValue) {
+        String valueStr = BaseClass.getProp().getProperty(key);
+        if (valueStr != null && !valueStr.isEmpty()) {
+            try {
+                return Integer.parseInt(valueStr);
+            } catch (NumberFormatException e) {
+                System.out.println("⚠️ Invalid value for '" + key + "' in Config.properties. Using default: " + defaultValue);
+            }
+        } else {
+            System.out.println("⚠️ Property '" + key + "' missing in Config.properties. Using default: " + defaultValue);
+        }
+        return defaultValue;
+    }
+
+    // Click an element
     public void click(By by) {
         waitForClickable(by);
         driver.findElement(by).click();
     }
 
+    // Enter text into an input field
     public void enterText(By by, String value) {
         WebElement element = waitForVisible(by);
         element.clear();
         element.sendKeys(value);
     }
 
+    // Wait for element visibility
     public WebElement waitForVisible(By by) {
         return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
     }
@@ -198,10 +299,12 @@ public class ActionDriver {
                 .until(ExpectedConditions.visibilityOfElementLocated(by));
     }
 
+    // Wait for element to be clickable
     public void waitForClickable(By by) {
         wait.until(ExpectedConditions.elementToBeClickable(by));
     }
 
+    // Check if element is displayed
     public boolean isDisplayed(By by) {
         try {
             return waitForVisible(by).isDisplayed();
@@ -210,9 +313,20 @@ public class ActionDriver {
         }
     }
 
+    // Wait for page load
     public void waitForPageToLoad(int sec) {
         new WebDriverWait(driver, Duration.ofSeconds(sec)).until(
                 webDriver -> ((JavascriptExecutor) webDriver)
                         .executeScript("return document.readyState").equals("complete"));
     }
 }
+
+
+
+
+
+
+
+
+
+
